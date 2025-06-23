@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Транскрипция Whisper</title>
+</head>
+<body>
+  <h1>Транскрипция аудио (через прокси-сервер)</h1>
+
+  <input type="file" id="audioFile" accept="audio/*"><br><br>
+  <button id="go">Транскрибировать</button>
+  <button id="copy" disabled>Скопировать в буфер</button>
+
+  <h2>Результат:</h2>
+  <div
+    id="result"
+    style="
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: #f0f0f0;
+      padding: 1em;
+      border: 1px solid #ccc;
+      max-width: 100%;
+    "
+  ></div>
+
+  <script>
+    const goBtn = document.getElementById('go');
+    const copyBtn = document.getElementById('copy');
+    const resultEl = document.getElementById('result');
+
+    goBtn.addEventListener('click', async () => {
+      const fileInput = document.getElementById('audioFile');
+      if (!fileInput.files.length) {
+        alert('Выберите файл аудио');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      resultEl.textContent = '⏳ Загружаем и транскрибируем…';
+      copyBtn.disabled = true;
+
+      try {
+        const res = await fetch('https://whisper-proxy-server.onrender.com/transcribe', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) throw await res.text();
+        const text = await res.text();
+        resultEl.textContent = '*Автоматическая транскрипция*\n\n' + text;
+        copyBtn.disabled = false;
+      } catch (err) {
+        resultEl.textContent = 'Ошибка: ' + err;
+      }
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      const content = resultEl.textContent;
+      try {
+        await navigator.clipboard.writeText(content);
+        copyBtn.textContent = 'Скопировано!';
+        setTimeout(() => copyBtn.textContent = 'Скопировать в буфер', 2000);
+      } catch (e) {
+        alert('Не удалось скопировать: ' + e);
+      }
+    });
+  </script>
+</body>
+</html>
