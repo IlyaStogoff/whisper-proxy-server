@@ -15,7 +15,6 @@ def transcribe():
         return jsonify({"error": "No file uploaded"}), 400
 
     try:
-        # Преобразуем FileStorage → (имя_файла, поток, mimetype)
         file_tuple = (uploaded_file.filename, uploaded_file.stream, uploaded_file.mimetype)
 
         transcript = client.audio.transcriptions.create(
@@ -24,7 +23,7 @@ def transcribe():
             language="ru",
             response_format="text"
         )
-        return transcript.text, 200
+        return transcript, 200  # ← просто возвращаем текст напрямую
 
     except Exception as e:
         print("Ошибка при транскрипции:", e)
